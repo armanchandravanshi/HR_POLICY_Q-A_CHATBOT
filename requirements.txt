@@ -1,0 +1,9 @@
+langchain
+ollama
+streamlit
+langchain-community
+langgraph
+pyttsx3
+dotenv
+requests
+SpeechRecognition
