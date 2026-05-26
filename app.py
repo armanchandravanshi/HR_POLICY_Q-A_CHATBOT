@@ -2,7 +2,6 @@ import streamlit as st
 import ollama as ol
 import os
 from dotenv import load_dotenv
-import speech_recognition as sr
 from gtts import gTTS
 
 load_dotenv()
@@ -10,24 +9,7 @@ load_dotenv()
 MODEL = os.getenv("MODEL")
 
 # ---------------------------
-# Voice input function
-# ---------------------------
-def voice_input():
-    recognizer = sr.Recognizer()
-
-    with sr.Microphone() as source:
-        st.info("Listening...")
-        audio = recognizer.listen(source)
-
-    try:
-        text = recognizer.recognize_google(audio)
-        return text
-    except:
-        return "Sorry, could not understand audio"
-
-
-# ---------------------------
-# Voice output function
+# Text To Speech
 # ---------------------------
 def speak(text):
     tts = gTTS(text=text, lang='en')
@@ -49,96 +31,48 @@ st.set_page_config(
 
 st.title("🤖 HR Policy Q&A Chatbot")
 
-mode = st.radio("Choose Mode:", ["Text", "Voice"])
-
-# ---------------------------
-# Session State
-# ---------------------------
+# Session state
 if "history" not in st.session_state:
     st.session_state.history = []
 
+# User input
+user_input = st.text_input("Ask your HR question:")
 
-# ---------------------------
-# TEXT MODE
-# ---------------------------
-if mode == "Text":
+# Submit button
+if st.button("Submit") and user_input:
 
-    user_input = st.text_input("Ask your HR question:")
+    with st.spinner("Thinking..."):
 
-    if st.button("Submit") and user_input:
-
-        with st.spinner("Thinking..."):
-
-            st.write("### You:")
-            st.write(user_input)
-
-            ollama_response = ol.chat(
-                model=MODEL,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Answer HR questions."
-                    },
-                    {
-                        "role": "user",
-                        "content": user_input
-                    }
-                ]
-            )
-
-            response = ollama_response["message"]["content"]
-
-            st.write("### Bot:")
-            st.write(response)
-
-            speak(response)
-
-            st.session_state.history.append(("You", user_input))
-            st.session_state.history.append(("Bot", response))
-
-
-# ---------------------------
-# VOICE MODE
-# ---------------------------
-elif mode == "Voice":
-
-    if st.button("Speak"):
-
-        user_input = voice_input()
-
-        st.write("### You said:")
+        st.write("### You:")
         st.write(user_input)
 
-        with st.spinner("Thinking..."):
+        ollama_response = ol.chat(
+            model=MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Answer HR questions."
+                },
+                {
+                    "role": "user",
+                    "content": user_input
+                }
+            ]
+        )
 
-            ollama_response = ol.chat(
-                model=MODEL,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Answer HR questions."
-                    },
-                    {
-                        "role": "user",
-                        "content": user_input
-                    }
-                ]
-            )
+        response = ollama_response["message"]["content"]
 
-            response = ollama_response["message"]["content"]
+        st.write("### Bot:")
+        st.write(response)
 
-            st.write("### Bot:")
-            st.write(response)
+        # Voice output
+        speak(response)
 
-            speak(response)
+        # Save history
+        st.session_state.history.append(("You", user_input))
+        st.session_state.history.append(("Bot", response))
 
-            st.session_state.history.append(("You", user_input))
-            st.session_state.history.append(("Bot", response))
-
-
-# ---------------------------
 # Chat History
-# ---------------------------
 st.subheader("📜 Chat History")
 
 for sender, msg in st.session_state.history:
