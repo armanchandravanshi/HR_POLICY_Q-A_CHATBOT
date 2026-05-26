@@ -1,9 +1,6 @@
-langchain
-ollama
 streamlit
-langchain-community
-langgraph
-pyttsx3
-dotenv
-requests
+ollama
+python-dotenv
+gTTS
 SpeechRecognition
+pyaudio
